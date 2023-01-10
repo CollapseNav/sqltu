@@ -1,12 +1,11 @@
+use mydb;
+
 /*markdown
-查询可能是sql中使用频率最高的操作,这节主要简单介绍下这一点
-
-查询语句的格式
-
+查询可能是sql中使用频率最高的操作,这节主要简单介绍下这一点      
+查询语句的格式      
 ```sql
 SELECT {需要展示的字段} FROM {表名} WHERE {查询条件}
 ```
-
 在此之前先创建一个表,并且填充一部分数据
 */
 
@@ -24,7 +23,6 @@ CREATE TABLE userinfo
     -- 高精度类型,总长度18,小数点之前14位,小数点后4位,默认值为0
     money DECIMAL(18,4) DEFAULT 0 COMMENT '默认财产数额为0'
 );
-
 INSERT INTO userinfo(name,age,birthday,gender,money) VALUES
                     ('用户名0',10,'2022-01-01',1,23330.0001),
                     ('用户名1',11,'2022-01-01',1,23331.0001),
@@ -42,7 +40,7 @@ INSERT INTO userinfo(name,age,birthday,gender,money) VALUES
                     ('用户名13',113,'2022-01-13',2,233343.0001),
                     ('用户名14',114,'2022-01-01',2,233344.0001),
                     ('用户名15',115,'2022-01-15',2,233345.0001),
-                    ('用户名16',116,'2022-01-06',2,233346.0001)
+                    ('用户名16',116,'2022-01-06',2,233346.0001);
 
 /*markdown
 ## 基础使用
@@ -61,22 +59,17 @@ SELECT * FROM userinfo
 SELECT COUNT(1) FROM userinfo
 
 /*markdown
-可以自己选择需要展示的字段数据
-
-减少查询返回的数据量
-
-在数据比较多的情况下可以提升返回结果的速度
-
+可以自己选择需要展示的字段数据      
+减少查询返回的数据量        
+在数据比较多的情况下可以提升返回结果的速度      
 并且可以排除多余字段对视觉的干扰
 */
 
 SELECT name,age FROM userinfo
 
 /*markdown
-查询结果的展示列名为建表时设置的字段列,可能不够直观
-
-自定义字段列名可以有效改善观感
-
+查询结果的展示列名为建表时设置的字段列,可能不够直观     
+自定义字段列名可以有效改善观感      
 可以使用 `{字段名} {自定义列名}` 或者 `{字段名} AS {自定义列名}` 进行修改
 */
 
@@ -87,12 +80,9 @@ SELECT name 姓名,age AS 年龄 FROM userinfo
 */
 
 /*markdown
-很多时候我们并不需要查询出所有数据
-
-只需要查询满足条件的数据即可
-
-这时就可以通过 `WHERE` 对查询的数据进行筛选
-
+很多时候我们并不需要查询出所有数据      
+只需要查询满足条件的数据即可        
+这时就可以通过 `WHERE` 对查询的数据进行筛选     
 多个条件可以用 `AND` `OR` 连接
 */
 
@@ -146,10 +136,8 @@ ORDER BY money DESC
 */
 
 /*markdown
-有些时候需要对数据进行分组统计,比如对 **性别** 进行分组
-
-这时候可以使用 `GROUP BY` 分组
-
+有些时候需要对数据进行分组统计,比如对 **性别** 进行分组     
+这时候可以使用 `GROUP BY` 分组      
 然后可以使用 `COUNT(1)` 统计数量
 */
 
@@ -165,8 +153,7 @@ AND age < 112
 GROUP BY gender
 
 /*markdown
-需要注意的是,在使用 `GROUP BY` 时只能展示 `GROUP BY` 后面跟着的字段
-
+需要注意的是,在使用 `GROUP BY` 时只能展示 `GROUP BY` 后面跟着的字段     
 比如下面的写法就会产生错误
 */
 
@@ -177,17 +164,12 @@ AND age < 112
 GROUP BY gender
 
 /*markdown
-name没有包含在 `GROUP BY` 后面,所以执行失败
-
-这是由于在对 gender(性别) 进行分组后,无法知道任何与 name 有关的信息
-
-想象每个 gender 值都有一个箱子,以现有的数据来看就是存在 gender=1 和 gender=2 这两个箱子
-
-`GROUP BY` 就是将符合条件的数据丢到箱子里
-
-能够通过 `SELECT` 展示的数据仅仅只有箱子的信息
-
-比如 其中一个箱子叫1 箱子里面有几个数据 箱子里的数据相加的和 等
+name没有包含在 `GROUP BY` 后面,所以执行失败     
+这是由于在对 gender(性别) 进行分组后,无法知道任何与 name 有关的信息     
+想象每个 gender 值都有一个箱子,以现有的数据来看就是存在 gender=1 和 gender=2 这两个箱子     
+`GROUP BY` 就是将符合条件的数据丢到箱子里       
+能够通过 `SELECT` 展示的数据仅仅只有 `GROUP BY` 之后箱子的信息      
+比如 其中一个箱子叫1的箱子里面 有几个数据 那些数据相加的和 等
 */
 
 SELECT gender AS 性别,money 金钱 FROM userinfo
@@ -203,7 +185,7 @@ AND age < 112
 GROUP BY gender
 
 /*markdown
-`GROUP BY` 也可以使用多字段分组
+`GROUP BY` 也可以使用多字段分组     
 */
 
 SELECT gender AS 性别,birthday 生日 FROM userinfo
@@ -216,17 +198,5 @@ WHERE
     age > 15
 AND age < 112
 GROUP BY gender,birthday
-
-/*markdown
-对于上面的查询结果中 `性别` 的值看起来毫无意义
-
-可以使用 `CASE` 修改结果的呈现 
-*/
-
-SELECT gender AS 性别,CASE WHEN gender = 1 THEN '男' ELSE '女' END AS 有意义的性别,COUNT(1) AS 数量 FROM userinfo
-WHERE
-    age > 15
-AND age < 112
-GROUP BY gender
 
 drop table userinfo
