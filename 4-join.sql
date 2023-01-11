@@ -56,11 +56,11 @@ CREATE TABLE orders
     id INT PRIMARY KEY AUTO_INCREMENT,
     userid INT NOT NULL COMMENT '用户id 根据用户表定',
     productid INT NOT NULL COMMENT '商品id 根据商品表定',
-    amount INT NOT NULL COMMENT '数量',
+    amount INT NOT NULL COMMENT '下单数量',
     ordertime DATETIME NOT NULL COMMENT '下单日期'
 );
 INSERT INTO orders(userid,productid,amount,ordertime)
-                VALUES(1,1,10,'2023-01-01 10:00:00')
+            VALUES(1,1,10,'2023-01-01 10:00:00')
 
 /*markdown
 创建三张表 userinfo:用户表 product:商品表 orders:订单表     
@@ -72,8 +72,8 @@ SELECT * FROM product;
 SELECT * FROM orders;
 
 /*markdown
-直接查询得到的结果看起来非常多, 但如果现在只需要获取订单相关的信息, 比如下单人的姓名, 下单的商品名称, 这种单表的查询方式就非常不够了,此时就需要用到联表查询     
-在实际使用中, 联表是个非常常用的操作, 有 `inner join` `left join` `right join` 三种, 下面细说
+直接查询得到的结果看起来非常多, 但如果现在只需要获取订单相关的信息, 比如下单人的姓名, 下单的商品名称, 这种单表的查询方式就非常不够用了,此时就需要用到联表查询     
+在实际使用中, 联表是个非常常用的操作, 有 `inner join`/`left join`/`right join` 三种, 下面细说
 */
 
 /*markdown
@@ -88,6 +88,141 @@ SELECT * FROM orders LEFT JOIN product ON orders.productid = product.id;
 SELECT * FROM orders RIGHT JOIN product ON orders.productid = product.id;
 
 /*markdown
-以上面三条语句为例, 由于查询的主体是订单, 所以将orders表放在前作为 `表1`, `product` 商品表作为 `表2`        
-两个表通过 商品表的id 关联, 订单表中的 `productid` 字段是 商品表 的主键值           
+以上面三条语句为例, 由于查询的主体是订单, 所以将orders表放在前作为 `表1`, product商品表作为 `表2`        
+两个表通过 `商品表的id` 关联, 订单表中的 `productid` 字段是 商品表 的主键值           
 */
+
+/*markdown
+当使用 `RIGHT JOIN` 右联接时, 会以右表(商品表)为基础, 根据 `ON` 后面跟着的条件, 尝试将左表(订单表)的数据和右表(商品表)拼起来          
+在现在的这个例子中, 由于只有 **农夫山泉** 有订单, 所以农夫山泉那一行会有订单相关数据, 其他的商品则没有      
+下面新增一条其他商品的订单再次测试
+*/
+
+INSERT INTO orders(userid,productid,amount,ordertime)
+                VALUES(1,2,10,'2023-01-01 10:00:00');
+SELECT * FROM orders RIGHT JOIN product ON orders.productid = product.id;
+
+/*markdown
+当增加了 **可口可乐** 的订单后, `RIGHT JOIN` 查出的数据中就有对应的订单信息了
+*/
+
+/*markdown
+如果同一个商品有多个订单, 也是类似的显示
+*/
+
+INSERT INTO orders(userid,productid,amount,ordertime)
+                VALUES(1,2,10,'2023-01-01 10:00:00'),
+                      (2,2,11,'2023-01-01 10:00:00');
+SELECT * FROM orders RIGHT JOIN product ON orders.productid = product.id;
+
+/*markdown
+`LEFT JOIN` 为左联接, 作用与 `RIGHT JOIN` 相反, 是以左表为主, 将右表拼到左表中
+*/
+
+INSERT INTO orders(userid,productid,amount,ordertime)
+                VALUES(1,22,10,'2023-01-01 10:00:00'),
+                      (2,22,11,'2023-01-01 10:00:00');
+SELECT * FROM orders LEFT JOIN product ON orders.productid = product.id;
+SELECT * FROM orders RIGHT JOIN product ON orders.productid = product.id;
+
+/*markdown
+刚增加的两条订单数据使用的订单id为22, 这个id在商品表中不存在, 所以左联之后的这两条数据没有商品信息      
+同理, 在右联接时不会显示新增的两条订单数据
+*/
+
+/*markdown
+`INNER JOIN` 内联接, 只会显示左表和右表都能匹配的数据
+*/
+
+SELECT * FROM orders INNER JOIN product ON orders.productid = product.id;
+
+/*markdown
+`商品id=22` 在右表中不存在, 被排除, `商品id=3,商品id=4` 在左表中不存在, 被排除
+*/
+
+/*markdown
+可以使用多表联接, 新的联表条件接在 `ON` 的条件之后即可
+*/
+
+SELECT * FROM orders INNER JOIN product ON orders.productid = product.id
+                     INNER JOIN userinfo ON orders.userid = userinfo.id;
+SELECT * FROM orders LEFT JOIN product ON orders.productid = product.id
+                     LEFT JOIN userinfo ON orders.userid = userinfo.id;
+SELECT * FROM orders RIGHT JOIN product ON orders.productid = product.id
+                     RIGHT JOIN userinfo ON orders.userid = userinfo.id;
+
+SELECT * FROM orders INNER JOIN product ON orders.productid = product.id
+                     LEFT JOIN userinfo ON orders.userid = userinfo.id;
+SELECT * FROM orders RIGHT JOIN product ON orders.productid = product.id
+                     LEFT JOIN userinfo ON orders.userid = userinfo.id;
+SELECT * FROM orders RIGHT JOIN product ON orders.productid = product.id
+                     LEFT JOIN userinfo ON orders.userid = userinfo.id;
+
+/*markdown
+根据上面的结果可以发现, 不同的联表方式查出来的数据可能会有非常大的差距, 需要根据实际情况合理编排 ~~虽然我基本上没有用过右联接~~
+*/
+
+/*markdown
+每个表都会有很多字段, 所以在联表查询时可以使用上一节提到的方法, 自定义查询返回的字段
+*/
+
+SELECT  orders.id 订单主键
+       ,orders.ordertime 下单时间
+       ,userinfo.name AS 用户名
+       ,product.name  AS 商品名称
+       ,orders.amount AS 下单数量
+       ,product.price AS 商品单价
+FROM orders
+INNER JOIN product ON orders.productid = product.id
+INNER JOIN userinfo ON orders.userid = userinfo.id;
+
+/*markdown
+可以看到, 重新自定义查询字段之后, 输出的结果相对来说更加 **美观**
+*/
+
+/*markdown
+有些表的名称会非常长, 具体编写的时候会很麻烦      
+查询时的字段可以自定义名称, 联表的时候也可以给表自定义别名      
+给表加上别名之后的查询语句更加精简, 并且结果不变
+*/
+
+SELECT  o.id 订单主键
+       ,o.ordertime 下单时间
+       ,u.name AS 用户名
+       ,p.name  AS 商品名称
+       ,o.amount AS 下单数量
+       ,p.price AS 商品单价
+FROM orders o
+INNER JOIN product p ON o.productid = p.id
+INNER JOIN userinfo u ON o.userid = u.id;
+
+/*markdown
+筛选,分组 之类的功能也可以配合使用
+*/
+
+SELECT   p.id AS 商品Id
+        ,p.name AS 商品名称
+        ,COUNT(1) AS 订单数量
+        ,SUM(o.amount) AS 下单总数
+        ,SUM(o.amount * p.price) AS 下单总金额
+FROM orders o
+INNER JOIN product p ON o.productid = p.id
+INNER JOIN userinfo u ON o.userid = u.id
+WHERE   o.amount <= 10
+AND     p.price > 0
+GROUP BY p.id,p.name;
+
+/*markdown
+上面根据 `商品id` 和 `商品名称` 分组        
+使用 `COUNT(1)` 统计每种商品分类的订单数量      
+使用 `SUM(o.amout)` 将每种商品分类中所有订单的下单数量相加求和      
+使用 `SUM(o.amount * p.price)` 将每种商品分类中所有订单先求出单个订单的金额, 然后将所有订单的金额相加求和
+*/
+
+/*markdown
+最后删除本节创建的表, 恢复数据库的状态
+*/
+
+drop table userinfo;
+drop table product;
+drop table orders;
